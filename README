@@ -1,0 +1,50 @@
+Framework apps
+==============
+
+Introduction
+------------
+
+The purpose of this repo is to figure what we actually need the Framework to do.
+
+Code
+----
+
+Clean reusable micro-applications should be located in apps directory, and the creepy stuff (framework) that ties it all together is in config.php.
+
+Requirement
+-----------
+
+The creepy stuff needs to be refactored, this can be a requirement for the Framework component.
+
+The objective of this project is to figure a correct way to develop reusable micro applications. 
+
+Micro applications
+------------------
+
+Micro appplications are decoupled project components which are useless by themselves alone, but should solve a variety of needs when tied in together.
+
+It is useful in a website production context, not only by encouraging agile practices but also by spreading maintenance of applications amongst users.
+
+Applications
+------------
+
+The (basic, unfinished) example applications are:
+
+Sites
+    Help developing multisite projects.
+
+Pages
+    Help developing database driven static pages. Currently depends on Sites, which could be decoupled in a PagesSitesTiein.
+
+Admin
+    Crud for PersistentObject.
+
+Dev
+    Help development, so far it has scripts to manage the autoloader.
+
+More development of these apps is not really required for the moment, getting them to play well together is the requirement to solve, IMHO.
+
+Todo
+----
+
+The priority is to refactor the creepy config.php, which was made to study what should be refactored.

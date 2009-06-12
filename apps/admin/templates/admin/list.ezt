@@ -1,0 +1,29 @@
+{use $list, $readablePropertiesNames, $poClass}
+
+<a href="/admin/create/{$poClass}">Create new {$poClass}</a>
+
+<table>
+    <thead>
+        <tr>
+            {foreach $readablePropertiesNames as $propertyName}
+            <th>
+                {$propertyName}
+            </th>
+            {/foreach}
+        </tr>
+    </thead>
+    <tbody>
+    {foreach $list as $object}
+        <tr>
+        {foreach $readablePropertiesNames as $propertyName}
+            <td>{$object->$propertyName}</td>
+        {/foreach}
+            <td>
+                <a href="/admin/details/{$poClass}/{$object->id}">Details</a>
+                <a href="/admin/edit/{$poClass}/{$object->id}">Edit</a>
+                <a href="/admin/delete/{$poClass}/{$object->id}">Delete</a>
+            </td>
+        </tr>
+    {/foreach}
+    </tbody>
+</table>

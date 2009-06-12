@@ -1,0 +1,10 @@
+{use $deleted, $object}
+
+{if $deleted}
+<h1>Object deletion OK</h1>
+{else}
+<h1>Object deletion confirmation request</h1>
+<form method="post">
+    <input type="submit" name="confirm" value="confirm" />
+</form>
+{/if}

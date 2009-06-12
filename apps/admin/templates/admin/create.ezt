@@ -1,0 +1,3 @@
+{use $form, $readableProperties, $editableProperties, $poClass}
+
+{$form}

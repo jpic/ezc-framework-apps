@@ -1,0 +1,9 @@
+{use $main}
+<html>
+<head>
+    <title>Admin app</title>
+</head>
+<body>
+{$main}
+</body>
+</html>

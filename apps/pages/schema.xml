@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<database>
+ <table>
+  <name>cms_pages</name>
+  <declaration>
+   <field>
+    <name>contents</name>
+    <type>clob</type>
+   </field>
+   <field>
+    <name>id</name>
+    <type>integer</type>
+    <length>8</length>
+    <autoincrement>true</autoincrement>
+    <notnull>true</notnull>
+   </field>
+   <field>
+    <name>site_id</name>
+    <type>integer</type>
+    <length>8</length>
+   </field>
+   <field>
+    <name>slug</name>
+    <type>text</type>
+    <length>200</length>
+   </field>
+   <field>
+    <name>title</name>
+    <type>text</type>
+    <length>200</length>
+   </field>
+   <index>
+    <name>primary</name>
+    <primary>true</primary>
+    <unique>true</unique>
+    <field>
+     <name>id</name>
+    </field>
+   </index>
+  </declaration>
+ </table>
+</database>
