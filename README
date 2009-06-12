@@ -49,6 +49,14 @@ Todo
 
 The priority is to refactor the creepy config.php, which was made to study what should be refactored.
 
+Most wanted: infamny
+--------------------
+
+The ugliest parts of the yet creepy config files are:
+
+- poor application repository management,
+- need to subclass ezcMvcResult for each app, to let the view recognize where it comes from and select zones accordinately.
+
 Links
 -----
 
