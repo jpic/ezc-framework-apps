@@ -1,0 +1,30 @@
+The Framework component directly tryes to reduce project development and
+maintenance cost, while keeping high quality standards like the components.
+
+Use to framework to make and tie in micro applications for:
+
+- testability, higher quality project,
+- reusability, fasten project development,
+- maintenance distribution, project development cost reduction,
+
+Deployment
+----------
+
+Micro applications should declare possible:
+
+- dependencies,
+- installation command and fixtures,
+
+Application scope
+-----------------
+
+Applications can:
+
+- add fields and relations to persistent objects of another application,
+- overload a route or view of another application that it depends on,
+
+Application development
+-----------------------
+
+Helpers must be supplied by this component for development and *testing*, or a
+FrameworkTest component should tie in UnitTest.
