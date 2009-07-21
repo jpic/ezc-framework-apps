@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 runpath=`pwd`
 autoloadDir="autoload";
 
@@ -12,7 +12,12 @@ mkdir -p $autoloadDir;
 cd $autoloadDir;
 
 for file in `find ../* -name "*_autoload.php"`; do
-    ln -sfn $file .;
+    # exclude autoloadDir symlinks
+    echo $file | grep -q "\\.\\./$autoloadDir"
+
+    if [[ $? != "0" ]]; then
+        ln -sfn $file .
+    fi
 done;
 
 cd $runpath;
