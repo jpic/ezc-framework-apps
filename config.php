@@ -1,8 +1,25 @@
 <?php
-// Set the include path to the eZ Components location, and bootstrap the
-// library. The two lines below assume that you're using eZ Components from
-// SVN -- see the installation guide at http://ezcomponents.org/docs/install.
+define( 'EZC_TRUNK_PATH',
+    join( DIRECTORY_SEPARATOR, array(
+        dirname( __FILE__ ),
+        'ezc',
+        'trunk',
+) ) );
+
+define( 'APPS_TRUNK_PATH',
+    join( DIRECTORY_SEPARATOR, array(
+        dirname( __FILE__ ),
+        'apps',
+) ) );
+
+set_include_path( join( PATH_SEPARATOR, array( 
+    get_include_path(  ),
+    EZC_TRUNK_PATH,
+    APPS_TRUNK_PATH,
+) ) );
+
 require 'Base/src/base.php';
+
 function __autoload( $className )
 {
     if ( $className == 'PEAR_Error' )
@@ -48,12 +65,12 @@ $installedApps = array(
 $managers = array(  );
 foreach( $installedApps as $app )
 {
-    $testPath = $appsPath .
-        DIRECTORY_SEPARATOR .
-        $app .
-        DIRECTORY_SEPARATOR .
-        'pod';
-
+    $testPath = join( DIRECTORY_SEPARATOR, array( 
+        $appsPath,
+        $app,
+        'pod',
+    ) );
+    
     if ( is_dir( $testPath ) )
     {
         $managers[] = new ezcPersistentCacheManager( 
@@ -134,7 +151,11 @@ class aiiTemplateLocation implements ezcTemplateLocation
         // check $tc->templatePath/$request->host.
         if ( $this->requestHost )
         {
-            $testPath = $userPath . DIRECTORY_SEPARATOR . $this->templateName;
+            $testPath = join( DIRECTORY_SEPARATOR, array( 
+                $userPath,
+                $this->requestHost,
+                $this->templateName,
+            ) );
 
             if ( file_exists( $testPath ) )
             {
