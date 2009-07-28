@@ -291,6 +291,8 @@ class aiiAdminController extends ezcMvcController
         $form = new Zend_Form();
         $form->setName( $this->poClass . "_form" );
 
+        $schema = $this->schema->getSchema(  );
+
         foreach( $this->getEditableProperties() as $propertyName => $property )
         {
             $methodName = 'get' . ucfirst( $propertyName ) . 'Element';
@@ -300,22 +302,30 @@ class aiiAdminController extends ezcMvcController
                 continue;
             }
             
-            switch( $property->propertyType )
+            $dbField = $schema[$this->poDef->table]->fields[$property->columnName];
+            $dbType  = $dbField->type;
+
+            switch ( $dbType )
             {
-                case ezcPersistentObjectProperty::PHP_TYPE_STRING:
-                    $element = new Zend_Form_Element_Text( $propertyName );
-                    break;
-                case ezcPersistentObjectProperty::PHP_TYPE_INT:
+                case 'integer':
+                case 'timestamp':
+                case 'boolean':
                     $element = new Zend_Form_Element_Text( $propertyName );
                     $element->addValidator( 'allnum' );
                     $element->addFilter( 'int' );
                     break;
-                case ezcPersistentObjectProperty::PHP_TYPE_FLOAT:
+                case 'float':
+                case 'decimal':
                     $element = new Zend_Form_Element_Text( $propertyName );
                     break;
-                case ezcPersistentObjectProperty::PHP_TYPE_ARRAY:
-                case ezcPersistentObjectProperty::PHP_TYPE_OBJECT:
-                case ezcPersistentObjectProperty::PHP_TYPE_BOOL:
+                case 'text':
+                case 'time':
+                case 'date':
+                case 'blob':
+                case 'clob':
+                default:
+                    $element = new Zend_Form_Element_Text( $propertyName );
+                    break;
             }
 
             if ( list( $relatedClassName, $relationDef ) = $this->isFK( $property->columnName ) )
