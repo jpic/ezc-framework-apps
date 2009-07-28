@@ -130,13 +130,24 @@ class aiiView extends ezcMvcView
         if ( $this->result instanceof aiiAdminResult )
         {
             $view = new aiiAdminView( $this->request, $this->result );
-            return $view->createZones( $layout );
+            $views = $view->createZones( false );
         }
         elseif ( $this->result instanceof aiiPagesResult )
         {
             $view = new aiiPagesView( $this->request, $this->result );
-            return $view->createZones( $layout );
+            $views = $view->createZones( false );
         }
+
+
+        if ( $layout )
+        {
+            $views[] = new ezcMvcTemplateViewHandler( 
+                'layout',
+                new aiiTemplateLocation( 'layout.ezt', $this->request->host )
+            );
+        }
+
+        return $views;
     }
 }
 
