@@ -318,11 +318,13 @@ class aiiAdminController extends ezcMvcController
                 case 'decimal':
                     $element = new Zend_Form_Element_Text( $propertyName );
                     break;
+                case 'blob':
+                case 'clob':
+                    $element = new Zend_Form_Element_Textarea( $propertyName );
+                    break;
                 case 'text':
                 case 'time':
                 case 'date':
-                case 'blob':
-                case 'clob':
                 default:
                     $element = new Zend_Form_Element_Text( $propertyName );
                     break;
