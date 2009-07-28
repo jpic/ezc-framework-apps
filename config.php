@@ -92,17 +92,32 @@ ezcPersistentSessionInstance::set(
 
 class aiiRouter extends ezcMvcRouter
 {
-    public function createRoutes(  )
+    // @todo: decouple this into ezcMvcRoutesArray
+    public function importRouter( &$routes, $prefix, $router )
     {
-        $pagesRouter = new aiiPagesRouter( $this->request );
+        if ( is_string( $router ) ) 
+        {
+            $router = new $router( $this->request );
+        }
+        
+        if ( ! $router instanceof ezcMvcRouter )
+        {
+            trigger_error( "$router is not a router" );
+        }
 
-        $routes = self::prefix( '/cms/', $pagesRouter->createRoutes(  ) );
-
-        $adminRouter = new aiiAdminRouter( $this->request );
-        foreach( self::prefix( '/admin/', $adminRouter->createRoutes(  ) ) as $route )
+        foreach( self::prefix( $prefix, $router->createRoutes(  ) ) as $route )
         {
             $routes[] = $route;
         }
+    }
+
+    public function createRoutes(  )
+    {
+        $routes = array(  );
+        
+        // not the right way but will do for now
+        $this->importRouter( $routes, '/admin/', 'aiiAdminRouter' );
+        $this->importRouter( $routes, '/cms/', 'aiiPagesRouter' );
 
         return $routes;
     }
