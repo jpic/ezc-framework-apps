@@ -171,6 +171,7 @@ class aiiTemplateLocation implements ezcTemplateLocation
      */
     public function getPath()
     {
+        $tested = array();
         $tc = ezcTemplateConfiguration::getInstance(  );
         $userPath = $tc->templatePath;
 
@@ -186,7 +187,9 @@ class aiiTemplateLocation implements ezcTemplateLocation
             if ( file_exists( $testPath ) )
             {
                 return $testPath;
-            }          
+            }
+
+            $tested[] = $testPath;
         }
 
         // check $tc->templatePath/
@@ -195,6 +198,8 @@ class aiiTemplateLocation implements ezcTemplateLocation
         {
             return $testPath;
         }
+
+        $tested[] = $testPath;
 
         // check self::$paths
         foreach( self::$paths as $path )
@@ -205,7 +210,12 @@ class aiiTemplateLocation implements ezcTemplateLocation
             {
                 return $testPath;
             }
+
+            $tested[] = $testPath;
         }
+
+        print_r( $tested );
+        throw new Exception( 'Could not locate template' );
     }
 }
 
