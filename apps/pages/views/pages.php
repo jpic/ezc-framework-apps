@@ -6,7 +6,8 @@ class aiiPagesView extends ezcMvcView
         $zones = array();
 
         $zones[] = new ezcMvcTemplateViewHandler(
-            'page', 
+            // @todo: agree on namings or we'll end like django apps
+            'mainZone', 
             new aiiTemplateLocation( 'page.ezt', $this->request->host )
         );
        

@@ -8,19 +8,19 @@ class aiiAdminView extends ezcMvcView
         {
             case 'aiiAdminListResult':
                 $zones[] = new ezcMvcTemplateViewHandler( 
-                    'main',
+                    'mainZone',
                     new aiiTemplateLocation( 'admin/list.ezt', $this->request->host )
                 );
                 break;
             case 'aiiAdminFormResult':
                 $zones[] = new ezcMvcTemplateViewHandler( 
-                    'main',
+                    'mainZone',
                     new aiiTemplateLocation( 'admin/create.ezt', $this->request->host )
                 );
                 break;
             case 'aiiAdminDeleteResult':
                 $zones[] = new ezcMvcTemplateViewHandler( 
-                    'main',
+                    'mainZone',
                     new aiiTemplateLocation( 'admin/delete.ezt', $this->request->host )
                 );
                 break;
