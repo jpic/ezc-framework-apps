@@ -26,7 +26,7 @@ class aiiPagesController extends ezcMvcController
         $pages = $pos->find( $q, 'aiiPagesClass' );
         $page = current( $pages );
 
-        $ret = new ezcMvcResult;
+        $ret = new aiiPagesResult;
         $ret->variables['page'] = $page;
 
         if ( array_key_exists( 'site', $this->request->variables ) )
