@@ -1,4 +1,5 @@
 <?php
+// {{{ class autoload setup
 define( 'EZC_TRUNK_PATH',
     join( DIRECTORY_SEPARATOR, array(
         dirname( __FILE__ ),
@@ -35,119 +36,48 @@ function __autoload( $className )
 }
 
 include dirname( __FILE__ ) . '/apps/dev/autoload_config.php';
-
-// Configure the template system by telling it where to find templates, and
-// where to put the compiled templates.
-$tc = ezcTemplateConfiguration::getInstance();
-$tc->templatePath = dirname( __FILE__ ) . '/templates';
-$tc->compilePath = dirname( __FILE__ ) . '/cache';
-$tc->context = new ezcTemplateNoContext();
+// }}}
 
 ezcDbInstance::set(
     ezcDbFactory::create(
-        'mysql://mvctools:Yqtl6ngFuxOBoG3g0oGa@localhost/mvctools'
-    )
-);
-ezcDbInstance::set(
-    ezcDbFactory::create(
-        'mysql://mvctools:Yqtl6ngFuxOBoG3g0oGa@localhost/redmine'
-    ),
-    'users'
-);
-
-$installedApps = array( 
-    'admin',
-    'sites',
-    'dev',
-    'pages',
-);
-
-$managers = array(  );
-foreach( $installedApps as $app )
-{
-    $testPath = join( DIRECTORY_SEPARATOR, array( 
-        $appsPath,
-        $app,
-        'pod',
-    ) );
-    
-    if ( is_dir( $testPath ) )
-    {
-        $managers[] = new ezcPersistentCacheManager( 
-            new ezcPersistentCodeManager( 
-                $testPath
-            )
-        );
-    }
-}
-
-ezcPersistentSessionInstance::set( 
-    new ezcPersistentSession( 
-        ezcDbInstance::get(),
-        new ezcPersistentMultiManager( 
-            $managers
-        )
+        "mysql://site:3yziLEJfSwUwEz4FYvEzhxUCwNe7ak@localhost/site"
     )
 );
 
-class aiiRouter extends ezcMvcRouter
-{
-    // @todo: decouple this into ezcMvcRoutesArray
-    public function importRouter( &$routes, $prefix, $router )
-    {
-        if ( is_string( $router ) ) 
-        {
-            $router = new $router( $this->request );
+class aiiFramework {
+    /**
+     * List of installed app names.
+     *
+     * @var array
+     */
+    public $installedApps = array(  );
+
+    /**
+     * Absolute path to the apps.
+     *
+     * The real framework should allow multiple paths.
+     * 
+     * @var string
+     */
+    public $appsPath = '';
+
+    /**
+     * Absolute path to templates that overload app templates.
+     *
+     * The real framework should allow multiple paths.
+     * 
+     * @var string
+     */
+    public $templatePath = '';
+
+    public $cachePath = '';
+
+    static public $instance = null;
+    public static function instance(  ) {
+        if ( is_null( self::$instance ) ) {
+            self::$instance = new aiiFramework(  );
         }
-        
-        if ( ! $router instanceof ezcMvcRouter )
-        {
-            trigger_error( "$router is not a router" );
-        }
-
-        foreach( self::prefix( $prefix, $router->createRoutes(  ) ) as $route )
-        {
-            $routes[] = $route;
-        }
-    }
-
-    public function createRoutes(  )
-    {
-        $routes = array(  );
-        
-        // not the right way but will do for now
-        $this->importRouter( $routes, '/admin/', 'aiiAdminRouter' );
-        $this->importRouter( $routes, '/cms/', 'aiiPagesRouter' );
-
-        return $routes;
-    }
-}
-
-class aiiView extends ezcMvcView
-{
-    public function createZones( $layout )
-    {
-        if ( $this->result instanceof aiiAdminResult )
-        {
-            $view = new aiiAdminView( $this->request, $this->result );
-            $views = $view->createZones( false );
-        }
-        elseif ( $this->result instanceof aiiPagesResult )
-        {
-            $view = new aiiPagesView( $this->request, $this->result );
-            $views = $view->createZones( false );
-        }
-
-
-        if ( $layout )
-        {
-            $views[] = new ezcMvcTemplateViewHandler( 
-                'layout',
-                new aiiTemplateLocation( 'layout.ezt', $this->request->host )
-            );
-        }
-
-        return $views;
+        return self::$instance;
     }
 }
 
@@ -219,10 +149,155 @@ class aiiTemplateLocation implements ezcTemplateLocation
     }
 }
 
-foreach( $installedApps as $app )
-{
-    aiiTemplateLocation::$paths[] = $appsPath . DIRECTORY_SEPARATOR . $app . DIRECTORY_SEPARATOR . 'templates';
+class aiiFrameworkTemplateInitializer implements ezcBaseConfigurationInitializer {
+    static public function configureObject( $cfg ) {
+        $framework = aiiFramework::instance(  );
+        $cfg->templatePath = $framework->templatePath;
+        $cfg->compilePath = join( DIRECTORY_SEPARATOR, array( 
+            $framework->cachePath,
+            'compiled_templates'
+        ) );
+        $cfg->context = new ezcTemplateNoContext();
+
+        foreach( $framework->installedApps as $app ) {
+            aiiTemplateLocation::$paths[] = join( DIRECTORY_SEPARATOR, array( 
+                $framework->appsPath,
+                $app,
+                'templates',
+            ) );
+        }
+
+        // is it the right place to load apps template custom blocks and functions?
+    }
 }
+
+class aiiFrameworkPersistentObjectInitializer implements ezcBaseConfigurationInitializer {
+    public static function configureObject( $instance ) {
+        $framework = aiiFramework::instance(  );
+        $managers = array(  );
+
+        foreach( $framework->installedApps as $app )
+        {
+            $testPath = join( DIRECTORY_SEPARATOR, array( 
+                $framework->appsPath,
+                $app,
+                'pod',
+            ) );
+            
+            if ( is_dir( $testPath ) )
+            {
+                $managers[] = new ezcPersistentCacheManager( 
+                    new ezcPersistentCodeManager( 
+                        $testPath
+                    )
+                );
+            }
+        }
+        
+        $session = new ezcPersistentSession( 
+            ezcDbInstance::get(),
+            new ezcPersistentMultiManager( 
+                $managers
+            )
+        );
+    
+        return $session;
+    }
+}
+
+class aiiFrameworkRouter extends ezcMvcRouter {
+    public function createRoutes(  ) {
+        $framework = aiiFramework::instance(  );
+        $routes = array(  );
+
+        foreach( $framework->installedApps as $app ) {
+            $routerFile = join( DIRECTORY_SEPARATOR, array( 
+                $framework->appsPath,
+                $app,
+                'router.php',
+            ) );
+
+            // something ugly
+            // we really don't want to have to make application
+            // configuration files and such  ... standards should be argeed
+            if ( file_exists( $routerFile ) ) {
+                $f = file_get_contents( $routerFile );
+                preg_match_all(  '/class ([\w]+) extends [\w]*Router/', $f, $m );
+                $routerClass = $m[1][0];
+
+                $router = new $routerClass( $this->request );
+                foreach( self::prefix( sprintf( '/%s/', $app ), $router->createRoutes(  ) ) as $route ) {
+                    $routes[] = $route;
+                }
+            }
+        }
+
+        return $routes;
+    }
+}
+
+
+$framework = aiiFramework::instance(  );
+
+$framework->appsPath = realpath( join( DIRECTORY_SEPARATOR, array( 
+    dirname( __FILE__ ),
+    'apps',
+) ) );
+
+$framework->templatePath = realpath( join( DIRECTORY_SEPARATOR, array( 
+    dirname( __FILE__ ),
+    'templates',
+) ) );
+
+$framework->cachePath = realpath( join( DIRECTORY_SEPARATOR, array( 
+    dirname( __FILE__ ),
+    'cache',
+) ) );
+
+$framework->installedApps = array( 
+    'admin',
+    'sites',
+    'dev',
+    'pages',
+);
+
+ezcBaseInit::setCallback( 
+    'ezcInitPersistentSessionInstance',
+    'aiiFrameworkPersistentObjectInitializer'
+);
+
+ezcBaseInit::setCallback( 
+    'ezcInitTemplateConfiguration',
+    'aiiFrameworkTemplateInitializer'
+);
+
+class aiiView extends ezcMvcView
+{
+    public function createZones( $layout )
+    {
+        if ( $this->result instanceof aiiAdminResult )
+        {
+            $view = new aiiAdminView( $this->request, $this->result );
+            $views = $view->createZones( false );
+        }
+        elseif ( $this->result instanceof aiiPagesResult )
+        {
+            $view = new aiiPagesView( $this->request, $this->result );
+            $views = $view->createZones( false );
+        }
+
+        if ( $layout )
+        {
+            $views[] = new ezcMvcTemplateViewHandler( 
+                'layout',
+                new aiiTemplateLocation( 'layout.ezt', $this->request->host )
+            );
+        }
+
+        return $views;
+    }
+}
+
 
 class aiiMvcConfiguration implements ezcMvcDispatcherConfiguration
 {
@@ -235,7 +310,7 @@ class aiiMvcConfiguration implements ezcMvcDispatcherConfiguration
 
     public function createRouter( ezcMvcRequest $request )
     {
-        return new aiiRouter( $request );
+        return new aiiFrameworkRouter( $request );
     }
 
     public function createView( ezcMvcRoutingInformation $routeInfo, ezcMvcRequest $request, ezcMvcResult $result )
