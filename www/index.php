@@ -3,9 +3,9 @@
 include '../config.php';
 
 // Instantiate the dispatcher configuration object.
-$config = new aiiMvcConfiguration();
+$project = aiiProjectConfiguration::instance();
 
 // Send the configuration to the dispatcher, and run it.
-$dispatcher = new ezcMvcConfigurableDispatcher( $config );
+$dispatcher = new ezcMvcConfigurableDispatcher( $project );
 $dispatcher->run();
 ?>
