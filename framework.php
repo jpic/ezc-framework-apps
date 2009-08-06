@@ -8,12 +8,9 @@ class aiiAppConfiguration implements ezcMvcDispatcherConfiguration { // {{{
     public $path = '';
     protected $configuration = array( );
 
-    const UNCONFIGURED_COMPONENT = 0;
-    const UNCONFIGURED_VARIABLE = 1;
-
     public function __construct( ) {
         $this->configuration['Template'] = array(
-            'source' => 'templates',
+            'sourcePath' => 'templates',
             'compilePath' => 'cache/compiled_templates',
             'context' => new ezcTemplateNoContext(  ),
         );
@@ -25,16 +22,23 @@ class aiiAppConfiguration implements ezcMvcDispatcherConfiguration { // {{{
 
         $this->configuration['MvcTools'] = array( 
             'layoutTemplateName' => 'layout.ezt',
+            'layoutZoneName' => 'layout',
         );
     }
 
     public function getComponentConfig( $componentName, $variableName ) {
         if ( !array_key_exists( $componentName, $this->configuration ) ) {
-            return self::UNCONFIGURED_COMPONENT;
+            trigger_error( "$componentName not in this configuration" );
         }
-        elseif ( !array_key_exists( $variableName, $this->configuration[$component] ) ) {
-            return self::UNCONFIGURED_VARIABLE;
+
+        if ( !is_array( $this->configuration[$componentName] ) ) {
+            trigger_error( "$componentName configuration is not an array" );
         }
+
+        if ( !array_key_exists( $variableName, $this->configuration[$componentName] ) ) {
+            trigger_error( "$variableName not in this $componentName configuration" );
+        }
+
         return $this->configuration[$componentName][$variableName];
     }
 
@@ -166,8 +170,8 @@ class aiiProjectConfiguration extends aiiAppConfiguration { // {{{
 
     public function setUp( $appPaths, $factory = null ) {
         if ( !is_null( $factory ) ) {
-            if ( !is_object( $factory ) || !method_exists( $factory, 'createApp' ) ) {
-                trigger_error( "\$factory argument, if specified, should be an object with method 'createApp()'" );
+            if ( !is_object( $factory ) || !method_exists( $factory, 'createAppConfiguration' ) ) {
+                trigger_error( "\$factory argument, if specified, should be an object with method 'createAppConfiguration()'" );
             }
         } else {
             $factory = new aiiAppConfigurationFactory(  );
@@ -177,7 +181,7 @@ class aiiProjectConfiguration extends aiiAppConfiguration { // {{{
             // either try something else than the default app configuration
             // factory, either let the user subclass this
 
-            $app = $factory->createApp( $appPath );
+            $app = $factory->createAppConfiguration( $appPath );
             $this->apps[$app->namespace] = $app;
         }
 
@@ -193,7 +197,7 @@ class aiiProjectConfiguration extends aiiAppConfiguration { // {{{
     }
 
     public function createRouter( ezcMvcRequest $request ) {
-        $router = aiiProjectRouter( $request );
+        $router = new aiiProjectRouter( $request );
         $router->project = $this;
         return $router;
     }
@@ -208,7 +212,7 @@ class aiiProjectConfiguration extends aiiAppConfiguration { // {{{
     // set the appNameSpace on the result
     public function runResultFilters( ezcMvcRoutingInformation $routeInfo, ezcMvcRequest $request, ezcMvcResult $result )
     {
-        $result->appNameSpace = $routeInfo->router->appNameSpace;
+        $result->appNameSpace = $routeInfo->matchedRouteObject->appNameSpace;
         
         $result->variables['installRoot'] = preg_replace( '@/index\.php$@', '', $_SERVER['SCRIPT_NAME'] );
     }
@@ -239,7 +243,8 @@ class aiiAppConfigurationFactory { // {{{
      */
     public function getNamespace( $app ) {
         $split = split ( DIRECTORY_SEPARATOR, $app->path );
-        return $split[-1];
+        // i'm unsure why i cannot use -1 here but ok ...
+        return $split[count( $split ) - 1];
     }
 } // }}}
 
@@ -250,7 +255,7 @@ class aiiAppConfigurationFactory { // {{{
  * 
  * @return void
  */
-class aiiTemplateLocation implements ezcTemplateLocation // {{{
+class aiiTemplateLocation implements ezcTemplateLocation { // {{{
     static public $paths = array();
     public $templateName = '';
     public $requestHost = '';
@@ -312,7 +317,7 @@ class aiiTemplateLocation implements ezcTemplateLocation // {{{
             $tested[] = $testPath;
         }
 
-        print_r( $tested );
+        var_dump( $tested );
         throw new Exception( 'Could not locate template' );
     }
 } // }}}
@@ -348,13 +353,14 @@ class aiiProjectTemplateInitializer implements ezcBaseConfigurationInitializer {
 class aiiProjectPersistentObjectInitializer implements ezcBaseConfigurationInitializer { // {{{
     public static function configureObject( $instance ) {
         $project = aiiProjectConfiguration::instance(  );
+
         $managers = array(  );
 
         foreach( $project->apps as $app )
         {
-            $manager = $project->getComponentConfig( 'PersistentObject', 'definitionManager' );
+            $manager = $project->getComponentConfig( 'PersistentObject', 'definitionsManager' );
 
-            if ( ! $manager instanceof ezcPersistentDefinitionManagers ) {
+            if ( ! $manager instanceof ezcPersistentDefinitionManager ) {
                 $testPath = join( DIRECTORY_SEPARATOR, array( 
                     $app->path,
                     $app->getComponentConfig( 'PersistentObject', 'definitionsPath' ),
@@ -369,8 +375,10 @@ class aiiProjectPersistentObjectInitializer implements ezcBaseConfigurationIniti
                     );
                 }
             }
-
-            $managers[] = $manager;
+            
+            if ( $manager instanceof ezcPersistentDefinitionManager ) {
+                $managers[] = $manager;
+            }
         }
         
         $session = new ezcPersistentSession( 
@@ -390,20 +398,54 @@ class aiiProjectPersistentObjectInitializer implements ezcBaseConfigurationIniti
  * Note that it prefixes routes with the app namespace.
  */
 class aiiProjectRouter extends ezcMvcRouter { // {{{
-{
     public $project;
     public function createRoutes(  ) {
         $routes = array(  );
 
         foreach( $this->project->apps as $app ) {
-            if ( $router = $app->createRouter( $this->request ) )
+            if ( $router = $app->createRouter( $this->request ) ) {
                 foreach( self::prefix( sprintf( '/%s/', $app->namespace ), $router->createRoutes(  ) ) as $route ) {
+                    $route->appNameSpace = $app->namespace;
                     $routes[] = $route;
                 }
             }
         }
 
         return $routes;
+    }
+
+    // one liner modification under comment "hack"
+    public function getRoutingInformation(  ) {
+        $routes = $this->createRoutes();
+
+        if ( ezcBase::inDevMode() && ( !is_array( $routes ) || !count( $routes ) ) )
+        {
+            throw new ezcMvcNoRoutesException();
+        }
+
+        foreach ( $routes as $route )
+        {
+            if ( ezcBase::inDevMode() && !$route instanceof ezcMvcRoute )
+            {
+                throw new ezcBaseValueException( 'route', $route, 'instance of ezcMvcRoute' );
+            }
+
+            $routingInformation = $route->matches( $this->request );
+
+            // hack
+            $routingInformation->matchedRouteObject = $route;
+            if ( $routingInformation !== null )
+            {
+                // Add the router to the routing information struct, so that
+                // can be passed to the controllers for reversed route
+                // generation.
+                $routingInformation->router = $this;
+
+                return $routingInformation;
+            }
+        }
+
+        throw new ezcMvcRouteNotFoundException( $this->request );
     }
 } // }}}
 
@@ -415,22 +457,32 @@ class aiiFrameworkView extends ezcMvcView { // {{{
     public function createZones( $layout )
     {
         foreach( $this->project->apps as $app ) {
+            $result = $this->result;
+            print $result->appNameSpace;
+            print "Comparing $result->appNameSpace with $app->namespace <br>";
             if ( $this->result->appNameSpace == $app->namespace ) {
                 $view = $app->createView( $this->request, $this->result );
                 $views = $view->createZones( false );
             }
         }
 
+        if ( !isset( $views ) ) {
+            trigger_error( "Could not figure the app view" );
+        }
+
         if ( $layout )
         {
             $views[] = new ezcMvcTemplateViewHandler( 
-                'layout',
+                $this->project->getComponentConfig( 
+                    'MvcTools',
+                    'layoutZoneName'
+                ),
                 new aiiTemplateLocation( 
                     $this->project->getComponentConfig( 
                         'MvcTools',
                         'layoutTemplateName'
                     ),
-                    $this->request->host,
+                    $this->request->host
                 )
             );
         }
