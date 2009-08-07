@@ -38,18 +38,34 @@ interface aiiDefinitionConverter {
  * Conversions with persistent object definitions.
  */
 class aiiPersistentObjectDefinitionsConverter implements aiiDefinitionConverter {
+    public function toMiddleProperty( aiiMiddleProperty $property = null ) {
+
+    }
+    public function fromMiddleProperty( aiiMiddleProperty $property ) {
+
+    }
 }
 
 /**
  * Conversions with database schemas.
  */
 class aiiDatabaseSchemaConverter implements aiiDefinitionConverter {
+    public function toMiddleProperty( aiiMiddleProperty $property = null ) {
 
+    }
+    public function fromMiddleProperty( aiiMiddleProperty $property ) {
+
+    }
 }
 
 /**
  * Conversions with UserInput definitions.
  */
 class aiiUserInputConverter implements aiiDefinitionConverter {
+    public function toMiddleProperty( aiiMiddleProperty $property = null ) {
 
+    }
+    public function fromMiddleProperty( aiiMiddleProperty $property ) {
+
+    }
 }
