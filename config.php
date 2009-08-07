@@ -47,6 +47,7 @@ ezcDbInstance::set(
 include 'framework.php';
 
 $project = aiiProjectConfiguration::instance(  );
+$project->path = dirname( __FILE__ );
 
 $installedApps = array( 
     'admin',

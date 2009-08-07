@@ -95,13 +95,15 @@ class aiiAppConfiguration implements ezcMvcDispatcherConfiguration { // {{{
             // was part of the class to let it instanciate its own view
             // here
             
-            $view = new $viewClass( $request );
+            $view = new $viewClass( $request, $result );
 
             // this makes the difference
             $view->appNameSpace = $this->appNameSpace;
 
             return $view;
         }
+
+        trigger_error( "$viewFile does not exist");
     }
 
     public function createRequestParser()
@@ -204,7 +206,7 @@ class aiiProjectConfiguration extends aiiAppConfiguration { // {{{
     
     public function createView( ezcMvcRoutingInformation $routeInfo, ezcMvcRequest $request, ezcMvcResult $result )
     {
-        $view = new aiiFrameworkView( $request, $result );
+        $view = new aiiFrameworkView( $request, $result, $routeInfo );
         $view->project = $this;
         return $view;
     }
@@ -329,16 +331,22 @@ class aiiProjectTemplateInitializer implements ezcBaseConfigurationInitializer {
     static public function configureObject( $cfg ) {
         $project = aiiProjectConfiguration::instance(  );
         
-        $cfg->templatePath = $project->getComponentConfig( 'Template', 'sourcePath' );
+        $cfg->templatePath = join( DIRECTORY_SEPARATOR, array( 
+            $project->path,
+            $project->getComponentConfig( 'Template', 'sourcePath' ),
+        ) );
 
-        $cfg->compilePath = $project->getComponentConfig( 'Template', 'compilePath' );
+        $cfg->compilePath = join( DIRECTORY_SEPARATOR, array( 
+            $project->path,
+            $project->getComponentConfig( 'Template', 'compilePath' ),
+        ) );        
 
         $cfg->context = $project->getComponentConfig( 'Template', 'context' );
 
         foreach( $project->apps as $app ) {
             aiiTemplateLocation::$paths[] = join( DIRECTORY_SEPARATOR, array( 
                 $app->path,
-                $app->getComponentConfig( 'template', 'sourcePath' ),
+                $app->getComponentConfig( 'Template', 'sourcePath' ),
             ) );
         }
 
@@ -454,14 +462,18 @@ class aiiProjectRouter extends ezcMvcRouter { // {{{
  */
 class aiiFrameworkView extends ezcMvcView { // {{{
     public $project;
+    public $routeInfo;
+    public function __construct( ezcMvcRequest $request, ezcMvcResult $result, ezcMvcRoutingInformation $routeInfo ) {
+        parent::__construct( $request, $result );
+
+        $this->routeInfo = $routeInfo;
+    }
     public function createZones( $layout )
     {
         foreach( $this->project->apps as $app ) {
             $result = $this->result;
-            print $result->appNameSpace;
-            print "Comparing $result->appNameSpace with $app->namespace <br>";
             if ( $this->result->appNameSpace == $app->namespace ) {
-                $view = $app->createView( $this->request, $this->result );
+                $view = $app->createView( $this->routeInfo, $this->request, $this->result );
                 $views = $view->createZones( false );
             }
         }
