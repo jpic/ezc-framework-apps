@@ -44,12 +44,12 @@ ezcDbInstance::set(
     )
 );
 
-include 'framework.php';
+include 'framework_part0.php';
 
-$project = aiiProjectConfiguration::instance(  );
-$project->path = dirname( __FILE__ );
+$project = aiiProjectConfiguration::instance( dirname( __FILE__ ), 'ocpsys' );
 
 $installedApps = array( 
+    'core',
     'admin',
     'sites',
     'dev',
