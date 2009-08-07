@@ -48,8 +48,26 @@ Currently, the poc framework features:
 - aiiProjectView which figures which app view is appropriate for the passed result,
 - lazy configuration initializer for Template that loads all project apps extensions and sets up aiiTemplateLocation,
 - lazy configuration initializer for PersistentObject that make all project apps persistent object definitions usable,
-- a core app which provides a reverse routing template custom block,
-- a dev app with scripts to make app development easier,
+
+Apps
+----
+
+Currently, the poc framework includes apps:
+
+Core
+    Reverse routing template custom block.
+
+Dev
+    Scripts to make app development easier.
+
+Admin
+    Crud for persistent objects.
+
+Sites
+    Make a project multi-site.
+
+Pages
+    Simple cms.
 
 Part 1: component configuration conversion
 ==========================================
