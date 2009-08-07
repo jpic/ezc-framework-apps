@@ -8,12 +8,9 @@ class aiiAppConfiguration implements ezcMvcDispatcherConfiguration { // {{{
     public $path = '';
     protected $configuration = array( );
 
-    public function __construct( ) {
-        $this->configuration['Template'] = array(
-            'sourcePath' => 'templates',
-            'compilePath' => 'cache/compiled_templates',
-            'context' => new ezcTemplateNoContext(  ),
-        );
+    public function __construct( $path , $namespace ) {
+        $this->path = $path;
+        $this->namespace = $namespace;
 
         $this->configuration['PersistentObject'] = array( 
             'definitionsPath' => 'pod',
@@ -24,6 +21,33 @@ class aiiAppConfiguration implements ezcMvcDispatcherConfiguration { // {{{
             'layoutTemplateName' => 'layout.ezt',
             'layoutZoneName' => 'layout',
         );
+
+        $this->configuration['Template'] = array(
+            'sourcePath' => 'templates',
+            'compilePath' => 'cache/compiled_templates',
+            'context' => new ezcTemplateNoContext(  ),
+            'extensionClasses' => array(  ),
+        );
+
+        $extensionsDir = join( DIRECTORY_SEPARATOR, array( 
+            $this->path,
+            'template_extensions',
+        ) );
+
+        if ( is_dir( $extensionsDir ) ) {
+            $extensionsFiles = join( DIRECTORY_SEPARATOR, array( 
+                $extensionsDir,
+                '*',
+            ) );
+
+            foreach( glob( $extensionsFiles ) as $file ) {
+                $f = file_get_contents( $file );
+                preg_match_all(  '/class ([\w]+) implements [\w]*Custom(Function|Block)/', $f, $m );
+                $class = $m[1][0];
+
+                $this->configuration['Template']['extensionClasses'][] = $class;
+            }
+        }
     }
 
     public function getComponentConfig( $componentName, $variableName ) {
@@ -163,9 +187,9 @@ class aiiProjectConfiguration extends aiiAppConfiguration { // {{{
 
     // this should be handled by aiiProjectInstance, like ezcDbInstance
     static public $instance = null;
-    public static function instance(  ) {
+    public static function instance( $path = '', $namespace = '') {
         if ( is_null( self::$instance ) ) {
-            self::$instance = new aiiProjectConfiguration(  );
+            self::$instance = new aiiProjectConfiguration( $path, $namespace );
         }
         return self::$instance;
     }
@@ -229,12 +253,9 @@ class aiiProjectConfiguration extends aiiAppConfiguration { // {{{
  */
 class aiiAppConfigurationFactory { // {{{
     public function createAppConfiguration( $path ) {
-        $app = new aiiAppConfiguration(  );
-        $app->path = $path;
-
-        // check if path/app.php exists and returns an appConfiguration
-
-        $app->namespace = $this->getNamespace( $app );
+        // check if path/app.php exists and returns an appConfiguration ?
+        
+        $app = new aiiAppConfiguration( $path, $this->getNamespace( $path ) );
 
         return $app;
     }
@@ -243,8 +264,8 @@ class aiiAppConfigurationFactory { // {{{
      * This app configuration factory expects the app root folder name to
      * correspond to the app namespace.
      */
-    public function getNamespace( $app ) {
-        $split = split ( DIRECTORY_SEPARATOR, $app->path );
+    public function getNamespace( $path ) {
+        $split = split ( DIRECTORY_SEPARATOR, $path );
         // i'm unsure why i cannot use -1 here but ok ...
         return $split[count( $split ) - 1];
     }
@@ -348,9 +369,11 @@ class aiiProjectTemplateInitializer implements ezcBaseConfigurationInitializer {
                 $app->path,
                 $app->getComponentConfig( 'Template', 'sourcePath' ),
             ) );
-        }
 
-        // is it the right place to load apps template custom blocks and functions?
+            foreach( $app->getComponentConfig( 'Template', 'extensionClasses' ) as $class ) {
+                $cfg->addExtension( $class );
+            }
+        }
     }
 } // }}}
 
