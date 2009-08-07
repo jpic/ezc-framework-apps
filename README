@@ -1,61 +1,70 @@
-Framework apps
-==============
+eZ Components Framework Research
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+by James Pic with the kind help of Derick Rethans
 
 Introduction
-------------
+============
 
-The purpose of this repo is to figure what we actually need the Framework to do.
+No discussion was actively followed on the eZ Components mailing list, so this stands for my personnal beleifs.
 
-Code
-----
+There are differences between the framework and libraries:
 
-Clean reusable micro-applications should be located in apps directory, and the creepy stuff (framework) that ties it all together is in config.php.
+- the framework defines application configuration, to make applications to play nice together in the scope of a project.
+- the framework ties in loosely coupled libraries, to convert configuration for one lib into the configuration for another.
 
-Requirement
------------
+Part 0: application reusability
+===============================
 
-The creepy stuff needs to be refactored, this can be a requirement for the Framework component.
+Application configuration
+-------------------------
 
-The objective of this project is to figure a correct way to develop reusable micro applications. 
+An application only needs two parameters:
 
-Micro applications
-------------------
+- a path to the root dir,
+- a namespace.
 
-Micro appplications are decoupled project components which are useless by themselves alone, but should solve a variety of needs when tied in together.
+Application configuration details is encapsulated in aiiAppConfiguration, which extends ezcMvcDispatcherConfiguration.
 
-It is useful in a website production context, not only by encouraging agile practices but also by spreading maintenance of applications amongst users.
+In the purpose of allowing a user to value convention over configuration in early application development stages, aiiAppConfiguration does not
+need to be defined for each application and is based on sensible defaults.
 
-Applications
-------------
+The difference between an application and a project is that a project encapsulates several applications, it's configuration class aiiProjectConfiguration
+extends aiiAppConfiguration and has an additionnal property "apps" which is an array of aiiAppConfiguration instances.
 
-The (basic, unfinished) example applications are:
+Project configuration
+---------------------
 
-Sites
-    Help developing multisite projects.
+The project configuration class has a getComponentConfiguration() method which is may be used instead of hardcoding a component configuration.
 
-Pages
-    Help developing database driven static pages. Currently depends on Sites, which could be decoupled in a PagesSitesTiein.
+Features
+--------
 
-Admin
-    Crud for PersistentObject.
+Currently, the poc framework features:
 
-Dev
-    Help development, so far it has scripts to manage the autoloader.
+- overloadable application layout conventions aiiAppConfiguration and the applications encapsulator aiiProjectConfiguration,
+- aiiTemplateLocation which tries template paths from the most specific to the least specific (ie. project template path first then app template path),
+- aiiProjectRouter which includes the routes from project apps after prefixing them with the app namespace,
+- aiiProjectView which figures which app view is appropriate for the passed result,
+- lazy configuration initializer for Template that loads all project apps extensions and sets up aiiTemplateLocation,
+- lazy configuration initializer for PersistentObject that make all project apps persistent object definitions usable,
+- a core app which provides a reverse routing template custom block,
+- a dev app with scripts to make app development easier,
 
-More development of these apps is not really required for the moment, getting them to play well together is the requirement to solve, IMHO.
+Part 1: component configuration conversion
+==========================================
 
-Todo
-----
+I think i'll make a trivial intermediary format (ie. property, properties encapsulator, constraints) and many factories and template blocks.
 
-The priority is to refactor the creepy config.php, which was made to study what should be refactored.
+Appendix
+========
 
-Most wanted: infamny
---------------------
+Issues
+------
 
-The ugliest parts of the yet creepy config files are:
+Namespacing isn't actually avalaible upstream (http://issues.ez.no/IssueView.php?Id=15185)
 
-- poor application repository management,
-- need to subclass ezcMvcResult for each app, to let the view recognize where it comes from and select zones accordinately.
+The hack in app/core/template_extensions/route.php, Derick and I are trying to figure a trivial solution for this non trivial problem.
 
 Links
 -----
