@@ -5,7 +5,7 @@ class aiiPagesRouter extends ezcMvcRouter
     {
         $routes = array(  );
 
-        $routes[] = new ezcMvcRailsRoute(
+        $routes['pages_read'] = new ezcMvcRailsRoute(
             ':slug', 
             'aiiPagesController',
             'read'

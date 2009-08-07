@@ -435,9 +435,9 @@ class aiiProjectRouter extends ezcMvcRouter { // {{{
 
         foreach( $this->project->apps as $app ) {
             if ( $router = $app->createRouter( $this->request ) ) {
-                foreach( self::prefix( sprintf( '/%s/', $app->namespace ), $router->createRoutes(  ) ) as $route ) {
+                foreach( self::prefix( sprintf( '/%s/', $app->namespace ), $router->createRoutes(  ) ) as $name => $route ) {
                     $route->appNameSpace = $app->namespace;
-                    $routes[] = $route;
+                    $routes[$name] = $route;
                 }
             }
         }

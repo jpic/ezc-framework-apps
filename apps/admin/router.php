@@ -4,27 +4,27 @@ class aiiAdminRouter extends ezcMvcRouter
     public function createRoutes()
     {
         return array( 
-            new ezcMvcRailsRoute( 
+            'admin_list' => new ezcMvcRailsRoute( 
                 'list/:poClass',
                 'aiiAdminController',
                 'list'
             ),
-            new ezcMvcRailsRoute( 
+            'admin_create' => new ezcMvcRailsRoute( 
                 'create/:poClass',
                 'aiiAdminController',
                 'create'
             ),
-            new ezcMvcRailsRoute( 
+            'admin_edit' => new ezcMvcRailsRoute( 
                 'edit/:poClass/:id',
                 'aiiAdminController',
                 'edit'
             ),
-            new ezcMvcRailsRoute( 
+            'admin_delete' => new ezcMvcRailsRoute( 
                 'delete/:poClass/:id',
                 'aiiAdminController',
                 'delete'
             ),
-            new ezcMvcRailsRoute( 
+            'admin_details' => new ezcMvcRailsRoute( 
                 'details/:poClass/:id',
                 'aiiAdminController',
                 'details'
