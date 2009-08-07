@@ -440,10 +440,11 @@ class aiiProjectRouter extends ezcMvcRouter { // {{{
 
             $routingInformation = $route->matches( $this->request );
 
-            // hack
-            $routingInformation->matchedRouteObject = $route;
             if ( $routingInformation !== null )
             {
+                // hack
+                $routingInformation->matchedRouteObject = $route;
+
                 // Add the router to the routing information struct, so that
                 // can be passed to the controllers for reversed route
                 // generation.
