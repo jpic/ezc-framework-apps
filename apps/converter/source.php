@@ -17,7 +17,7 @@ class aiiMissingComponentConfigException extends aiiMiddleException {
  * As for property "type", i decided that PersistentObject would be the master,
  * that will probably be the case for other decisions of this kind.
  */
-class aiiMiddleProperty {
+class aiiMiddleProperty { # {{{
     /**
      * Array of component specific definitions.
      * 
@@ -51,7 +51,7 @@ class aiiMiddleProperty {
      * 
      * @var array
      */
-    private $middleProperties = array(  );
+    public $middleProperties = array(  );
 
     public function getComponentDefinition( $componentName ) {
         return array_key_exists( $componentName, $this->definitions ) ?
@@ -72,14 +72,14 @@ class aiiMiddleProperty {
      */
     public function getComponentConfig( $componentName, $variableName ) {
         $tryMethod = "get" . $componentName . ucfirst( $variableName );
-        var_dump( $tryMethod );
+
         if ( method_exists( $this, $tryMethod ) ) {
             return $this->$tryMethod();
         }
 
         $componentDefinition = $this->getComponentDefinition( $componentName );
 
-        if ( !is_null( $componentDefinition ) ) {
+        if ( !is_null( $componentDefinition ) && isset( $componentDefinition->$variableName ) ) {
             return $componentDefinition->$variableName;
         }
 
@@ -107,7 +107,7 @@ class aiiMiddleProperty {
      * Should figure with a middle type
      */
     public function getPersistentObjectPropertyType(  ) {
-        trigger_error( "Not implemented, return ezcPersistentObjectProperty::PHP_TYPE_STRING" );
+        # trigger_error( "Not implemented, return ezcPersistentObjectProperty::PHP_TYPE_STRING");
         return ezcPersistentObjectProperty::PHP_TYPE_STRING;
     }
 
@@ -115,7 +115,7 @@ class aiiMiddleProperty {
      * Should figure with a middle type
      */
     public function getPersistentObjectDatabaseType(  ) {
-        trigger_error( "Not implemented, return PDO::PARAM_STR" );
+        #trigger_error( "Not implemented, return PDO::PARAM_STR" );
         return PDO::PARAM_STR;
     }
 
@@ -123,7 +123,7 @@ class aiiMiddleProperty {
      * Should figure with a middle type
      */
     public function getPersistentObjectConverter(  ) {
-        trigger_error( "Not implemented, return null" );
+        # trigger_error( "Not implemented, return null" );
         return null;
     }
 
@@ -173,7 +173,7 @@ class aiiMiddleProperty {
 
         return $this->middleProperties[$name];
     }
-}
+} # }}}
 
 /**
  * Inter-component factory interface.
@@ -181,7 +181,7 @@ class aiiMiddleProperty {
  * The base component specific definitions should be passed to the constructor
  * which is not defined here because it may depend on components.
  */
-interface aiiDefinitionConverter {
+interface aiiDefinitionConverter { # {{{
     /**
      * Converts a definition into an intermediary property.
      */
@@ -191,13 +191,12 @@ interface aiiDefinitionConverter {
      * Returns a component specific definition from a middle property.
      */
     public function fromMiddleProperty( aiiMiddleProperty $property );
-}
+} # }}}
 
 /**
  * Conversions with persistent object definitions.
  */
-class aiiPersistentObjectDefinitionsConverter implements aiiDefinitionConverter {
-    
+class aiiPersistentObjectDefinitionsConverter implements aiiDefinitionConverter { # {{{   
     private $manager;
     
     private $definition;
@@ -241,9 +240,9 @@ class aiiPersistentObjectDefinitionsConverter implements aiiDefinitionConverter 
             "PersistentObject",
             "class"
         );
-
+        
         foreach( $middleProperty->middleProperties as $middleChildProperty ) {
-            $propertyDef = new ezcPersistentObjectChildProperty(
+            $propertyDef = new ezcPersistentObjectProperty(
                 $middleChildProperty->getComponentConfig( 
                     "PersistentObject",
                     "columnName"
@@ -277,12 +276,12 @@ class aiiPersistentObjectDefinitionsConverter implements aiiDefinitionConverter 
 
         return $this->definition;
     }
-}
+} # }}}
 
 /**
  * Conversions with database schemas tables.
  */
-class aiiDatabaseSchemaTableConverter implements aiiDefinitionConverter {
+class aiiDatabaseSchemaTableConverter implements aiiDefinitionConverter { # {{{
     public $table;
     
     public function __construct( ezcDbSchemaTable $table ) {
@@ -324,15 +323,15 @@ class aiiDatabaseSchemaTableConverter implements aiiDefinitionConverter {
 
         return $propertiesDef;
     }
-}
+} # }}}
 
-/**
+/** 
  * Conversions with UserInput definitions.
  *
  * Because ezcInputForm is not flexible enough to support changing
  * its definition, it has to be re-created in fromMiddleProperty().
  */
-class aiiUserInputConverter implements aiiDefinitionConverter {
+class aiiUserInputConverter implements aiiDefinitionConverter { # {{{
     public $form = null;
     public function __construct( ezcInputForm $form ) {
         $this->form = $form;
@@ -388,4 +387,4 @@ class aiiUserInputConverter implements aiiDefinitionConverter {
 
         return $this->createForm( $definition );
     }
-}
+} # }}}
