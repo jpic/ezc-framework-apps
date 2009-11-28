@@ -92,6 +92,9 @@ class aiiMiddleProperty implements ArrayAccess { # {{{
                     case "class":
                     case "table":
                         return $this->name;
+                    case "visibility":
+                    case "generator":
+                        return null;
                 }
             case "DatabaseSchema":
                 switch( $variableName ) {
@@ -130,6 +133,14 @@ class aiiMiddleProperty implements ArrayAccess { # {{{
     public function getDatabaseSchemaType(  ) {
         trigger_error( "Not implemented, return text" );
         return "text";
+    }
+
+    /**
+     * Return the name of the child middle property which maps to the
+     * PersistentObject id property.
+     */
+    public function getPersistentObjectIdPropertyName(  ) {
+        return 'id';
     }
 
     public function __get( $name ) {
@@ -212,13 +223,18 @@ interface aiiMiddleDefinitionConverter { # {{{
 /**
  * Conversions with persistent object definitions.
  */
-class aiiPersistentObjectDefinitionsConverter implements aiiDefinitionConverter { # {{{   
+class aiiMiddlePersistentObjectDefinitionsConverter implements aiiMiddleDefinitionConverter { # {{{   
     private $manager;
     
     private $definition;
     
-    public function __construct( $definition, $manager ) {
+    public function __construct( $manager, $definition = null) {
         $this->manager = $manager;
+
+        if ( is_null( $definition ) ) {
+            $definition = new ezcPersistentObjectDefinition(  );
+        }
+
         $this->definition = $definition;
     }
 
@@ -289,6 +305,47 @@ class aiiPersistentObjectDefinitionsConverter implements aiiDefinitionConverter 
             $this->definition->properties[$offset] = $propertyDef;
             $middleChildProperty->definitions["PersistentObject"] = $propertyDef;
         }
+
+        $idMiddleProperty = $middleProperty[$middleProperty->getComponentConfig(
+            "PersistentObject",
+            "idPropertyName"
+        )];
+        $generator = $idMiddleProperty->getComponentConfig( 
+            "PersistentObject",
+            "generator"
+        );
+        if ( !$generator ) {
+            $generator = new ezcPersistentGeneratorDefinition(
+                'ezcPersistentSequenceGenerator',
+                array( 'sequence' => $middleProperty->name . '_id_seq' )
+            );
+        }
+
+        $idPropertyDef = new ezcPersistentObjectIdProperty( 
+             $idMiddleProperty->getComponentConfig( 
+                "PersistentObject",
+                "columnName"
+            ),
+            $idMiddleProperty->getComponentConfig( 
+                "PersistentObject",
+                "propertyName"
+            ),
+             $idMiddleProperty->getComponentConfig( 
+                "PersistentObject",
+                "visibility"
+            ),           
+            $generator,
+            $idMiddleProperty->getComponentConfig( 
+                "PersistentObject",
+                "propertyType"
+            ),
+            $idMiddleProperty->getComponentConfig( 
+                "PersistentObject",
+                "databaseType"
+            )
+        );
+
+        $this->definition->idProperty = $idPropertyDef;
 
         return $this->definition;
     }
