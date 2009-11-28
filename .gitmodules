@@ -1,3 +1,6 @@
 [submodule "doctrine"]
 	path = doctrine
 	url = git://github.com/bkw/doctrine.git
+[submodule "ezc"]
+	path = ezc
+	url = git://github.com/thkoch2001/ezcomponents-trunk.git
