@@ -13,35 +13,35 @@ define( 'APPS_TRUNK_PATH',
         'apps',
 ) ) );
 
+define( 'DOCTRINE_PATH',
+    join( DIRECTORY_SEPARATOR, array(
+        dirname( __FILE__ ),
+        'doctrine',
+) ) );
+
 set_include_path( join( PATH_SEPARATOR, array( 
     get_include_path(  ),
     EZC_TRUNK_PATH,
     APPS_TRUNK_PATH,
 ) ) );
 
-require 'Base/src/base.php';
+require join( DIRECTORY_SEPARATOR, array( 
+    DOCTRINE_PATH,
+    'lib',
+    'Doctrine.php'
+) );
+spl_autoload_register( array( 'Doctrine', 'autoload'));
 
-function __autoload( $className )
-{
-    if ( $className == 'PEAR_Error' )
-    {
-        include 'PEAR.php';
-        return;
-    }
-
-	if ( !ezcBase::autoload( $className ) )
-    {
-        include str_replace( '_', '/', $className ) . '.php';
-    }
-}
+require 'ezc/Base/src/base.php';
+ezcBase::setRunMode( ezcBase::MODE_DEVELOPMENT );
+spl_autoload_register( array( 'ezcBase', 'autoload'));
 
 include dirname( __FILE__ ) . '/apps/dev/autoload_config.php';
 // }}}
 
-ezcDbInstance::set(
-    ezcDbFactory::create(
-        "mysql://site:3yziLEJfSwUwEz4FYvEzhxUCwNe7ak@localhost/site"
-    )
+Doctrine_Manager::connection( 
+    "mysql://fcgid:...@localhost/shared",
+    'main'
 );
 
 include 'framework_part0.php';
