@@ -197,7 +197,7 @@ class aiiMiddleProperty implements ArrayAccess { # {{{
  * The base component specific definitions should be passed to the constructor
  * which is not defined here because it may depend on components.
  */
-interface aiiDefinitionConverter { # {{{
+interface aiiMiddleDefinitionConverter { # {{{
     /**
      * Converts a definition into an intermediary property.
      */
@@ -297,7 +297,7 @@ class aiiPersistentObjectDefinitionsConverter implements aiiDefinitionConverter 
 /**
  * Conversions with database schemas tables.
  */
-class aiiDatabaseSchemaTableConverter implements aiiDefinitionConverter { # {{{
+class aiiMiddleDatabaseSchemaTableConverter implements aiiMiddleDefinitionConverter { # {{{
     public $table;
     
     public function __construct( ezcDbSchemaTable $table ) {
@@ -347,7 +347,7 @@ class aiiDatabaseSchemaTableConverter implements aiiDefinitionConverter { # {{{
  * Because ezcInputForm is not flexible enough to support changing
  * its definition, it has to be re-created in fromMiddleProperty().
  */
-class aiiUserInputConverter implements aiiDefinitionConverter { # {{{
+class aiiMiddleUserInputConverter implements aiiMiddleDefinitionConverter { # {{{
     public $form = null;
     public function __construct( ezcInputForm $form ) {
         $this->form = $form;
