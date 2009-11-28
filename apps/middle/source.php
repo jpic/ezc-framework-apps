@@ -5,7 +5,7 @@ class aiiMiddleException extends Exception {
 }
 class aiiMissingComponentConfigException extends aiiMiddleException {
     public function __construct( $middleProperty, $componentName, $variableName ) {
-        parent::__construct( "$middleProperty does not have $variableName config for $componentName" );
+        parent::__construct( get_class( $middleProperty ) . " does not have $variableName config for $componentName" );
     }
 }
 // }}}
