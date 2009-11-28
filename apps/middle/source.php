@@ -17,7 +17,7 @@ class aiiMissingComponentConfigException extends aiiMiddleException {
  * As for property "type", i decided that PersistentObject would be the master,
  * that will probably be the case for other decisions of this kind.
  */
-class aiiMiddleProperty { # {{{
+class aiiMiddleProperty implements ArrayAccess { # {{{
     /**
      * Array of component specific definitions.
      * 
@@ -138,6 +138,22 @@ class aiiMiddleProperty { # {{{
     
     public function __set( $name, $value ) {
         $this->properties[$name] = $value;
+    }
+
+    public function offsetGet( $name ) {
+        return $this->middleProperties[$name];
+    }
+
+    public function offsetSet( $name, $property ) {
+        $this->middleProperties[$name] = $property;
+    }
+
+    public function offsetExists( $name ) {
+        return array_key_exists( $name, $this->middleProperties );
+    }
+
+    public function offsetUnset( $name ) {
+        unset( $this->middleProperties[$name] );
     }
 
     /**
